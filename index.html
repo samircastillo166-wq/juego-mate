@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ing en sistemas B UCN - breakout from area 51</title>
+    <style>
+        :root {
+            --slate-dark: #1a1d69;
+            --slate-medium: #2e3d4c;
+            --chalk-white: #f5f7fa;
+            --math-blue: #4a90e2;
+            --math-green: #27ae60;
+            --math-red: #c0392b;
+            --math-purple: #9b59b6;
+            --border-color: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--slate-dark);
+            color: var(--chalk-white);
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--slate-medium);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            width: 100%;
+            max-width: 550px;
+            border: 1px solid #41556b;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+            color: var(--math-blue);
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            text-align: center;
+            margin-bottom: 25px;
+            color: #94a3b8;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        @media (min-width: 480px) {
+            .controls {
+                grid-template-columns: 2fr 1fr;
+            }
+            .timer-row {
+                grid-column: span 2;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            h1 { font-size: 1.8rem; }
+        }
+
+        .select-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .select-wrapper label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        select, button, input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        select {
+            background-color: var(--slate-dark);
+            color: var(--chalk-white);
+            border-color: #41556b;
+            cursor: pointer;
+        }
+
+        input {
+            background-color: var(--chalk-white);
+            color: var(--slate-dark);
+        }
+
+        button {
+            background-color: var(--math-blue);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .btn-reset {
+            background-color: transparent;
+            border: 1px solid var(--math-red);
+            color: var(--math-red);
+        }
+
+        .btn-reset:hover {
+            background-color: var(--math-red);
+            color: white;
+        }
+
+        .timer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 5px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            color: #94a3b8;
+        }
+
+        .checkbox-container input {
+            width: auto;
+        }
+
+        .timer-box {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #f59e0b;
+        }
+
+        .door-stage {
+            border: 1px solid #41556b;
+            padding: 25px 20px;
+            border-radius: 6px;
+            background-color: rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        #doorTitle {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: var(--chalk-white);
+        }
+
+        .difficulty-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-bottom: 20px;
+            border-bottom: 1px dashed #41556b;
+            padding-bottom: 2px;
+        }
+
+        .equation {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin: 25px 0;
+            color: var(--chalk-white);
+            letter-spacing: 2px;
+            font-family: 'Times New Roman', Times, serif;
+            font-style: italic;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        @media (min-width: 400px) {
+            .input-group {
+                flex-direction: row;
+            }
+            .input-group input {
+                flex: 1;
+            }
+            .input-group button {
+                flex: 1.2;
+            }
+        }
+
+        input[type="number"] {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            min-height: 25px;
+            line-height: 1.4;
+        }
+
+        .video-container {
+            width: 100%;
+            margin: 15px 0 20px 0;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #41556b;
+            background-color: #000;
+        }
+
+        .video-container video {
+            width: 100%;
+            display: block;
+        }
+
+        /* Contenedor de revisión final (Solo Lectura) */
+        .review-section {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--math-purple);
+            border-radius: 6px;
+            text-align: left;
+        }
+
+        .review-section h3 {
+            color: var(--math-purple);
+            font-size: 1rem;
+            margin-bottom: 12px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .success-msg { color: var(--math-green); }
+        .error-msg { color: var(--math-red); }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>[ Sistema Algebraico.. ecuaciones leneales de 1 grado]</h1>
+    <p class="subtitle">Encuentre el valor analítico de x para cada sección</p>
+
+    <div class="controls">
+        <div class="select-wrapper">
+            <label for="levelSelect">Módulo actual:</label>
+            <select id="levelSelect" onchange="changeLevel()">
+                </select>
+        </div>
+        
+        <div>
+            <label style="visibility: hidden; font-size: 0.75rem; display: block; margin-bottom: 4px;">Acción</label>
+            <button class="btn-reset" onclick="resetGame()">Reiniciar</button>
+        </div>
+
+        <div class="timer-row">
+            <label class="checkbox-container">
+                <input type="checkbox" id="enableTimer" checked onchange="toggleTimerSettings()">
+                <span>Restricción de tiempo</span>
+            </label>
+            <div id="timerDisplay" class="timer-box">T: 00s</div>
+        </div>
+    </div>
+
+    <div class="door-stage" id="startZone">
+        <h2 style="color: var(--math-blue); margin-bottom: 15px;">BIENVENIDO AL AREA 51</h2>
+        <p style="margin-bottom: 25px; font-size: 0.9rem; color: #94a3b8; line-height: 1.6;">
+            Ocho módulos algebraicos bloquean la salida. Despeje cada incógnita antes de que el contador llegue a cero para restaurar los sistemas y salir.
+        </p>
+        <button onclick="startGame()" style="background-color: var(--math-green); font-size: 1.1rem; padding: 15px;">
+            ⚡ Iniciar reto ⚡
+        </button>
+    </div>
+
+    <div class="door-stage hidden" id="gameZone">
+        <h3 id="doorTitle">Cargando...</h3>
+        <div id="diffTag" class="difficulty-tag">Nivel</div>
+        <p style="font-size: 0.85rem; color: #94a3b8;">Despeje la incógnita:</p>
+        
+        <div class="equation" id="equationDisplay">x = ?</div>
+
+        <div class="input-group">
+            <input type="number" id="playerAnswer" placeholder="x =" inputmode="numeric" onkeydown="if(event.key==='Enter') checkAnswer()">
+            <button onclick="checkAnswer()">Evaluar solución</button>
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+    </div>
+
+    <div class="door-stage hidden" id="victoryZone">
+        <h2 style="color: var(--math-green); margin-bottom: 10px;">demaciado cerebro...</h2>
+        <p style="font-size: 0.9rem; color: #94a3b8;">mision completa soldado🪖, tu neurona merece vacaciones☀️😎.</p>
+        
+        <div class="video-container">
+            <video id="victoryVideo" controls autoplay>
+                <source src="dog.mp4" type="video/mp4">
+            </video>
+        </div>
+
+        <div class="review-section">
+            <h3>🔍 Ver Procedimiento de los Módulos</h3>
+            <div class="select-wrapper" style="margin-bottom: 10px;">
+                <label for="reviewSelect" style="color:#94a3b8;">Seleccionar Módulo:</label>
+                <select id="reviewSelect" onchange="loadProcedureToEdit()">
+                    </select>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 8px;">Procedimiento de resolución:</label>
+                <div id="procedureViewer" style="background-color: var(--slate-dark); color: #d1b3e0; border: 1px dashed var(--math-purple); padding: 15px; border-radius: 4px; font-size: 0.85rem; line-height: 1.6; text-align: left; white-space: pre-wrap;"></div>
+            </div>
+        </div>
+
+        <button onclick="restartFromZero()" style="margin-top: 20px;">Volver al Menú Principal</button>
+    </div>
+</div>
+
+<script>
+    const levels = [
+        { 
+            title: "firewall 01", 
+            diffText: "Complejidad: Baja (I)", 
+            equation: "x - 8 = 12", 
+            answer: 20, 
+            time: 30,
+            steps: "1. El número -8 está restando en el miembro izquierdo. Pasa al miembro derecho sumando:\n   x = 12 + 8\n2. Realizamos la suma básica:\n   x = 20"
+        },
+        { 
+            title: "firewall 02", 
+            diffText: "Complejidad: Baja (II)", 
+            equation: "x + 15 = 7", 
+            answer: -8, 
+            time: 35,
+            steps: "1. El número +15 está sumando. Pasa al miembro derecho restando:\n   x = 7 - 15\n2. Resolvemos la resta (obteniendo un número negativo):\n   x = -8"
+        },
+        { 
+            title: "firewall 03", 
+            diffText: "Complejidad: Media (I)", 
+            equation: "4x = 32", 
+            answer: 8, 
+            time: 30,
+            steps: "1. El coeficiente 4 se encuentra multiplicando a 'x'. Pasa al otro lado dividiendo:\n   x = 32 / 4\n2. Efectuamos la división correspondiente:\n   x = 8"
+        },
+        { 
+            title: "firewall 04", 
+            diffText: "Complejidad: Media (II)", 
+            equation: "3x + 9 = 30", 
+            answer: 7, 
+            time: 45,
+            steps: "1. Aislamos el término que contiene la incógnita. El +9 pasa restando:\n   3x = 30 - 9  ->  3x = 21\n2. El coeficiente 3 que multiplica a 'x' pasa dividiendo:\n   x = 21 / 3\n3. Solución final:\n   x = 7"
+        },
+        { 
+            title: "firewall 05", 
+            diffText: "Complejidad: Alta (I)", 
+            equation: "5x - 7 = 2x + 8", 
+            answer: 5, 
+            time: 60,
+            steps: "1. Agrupamos los términos con 'x' a la izquierda y las constantes a la derecha:\n   5x - 2x = 8 + 7\n2. Reducimos términos semejantes en ambos miembros:\n   3x = 15\n3. Despejamos 'x' pasando el 3 a dividir:\n   x = 15 / 3  ->  x = 5"
+        },
+        { 
+            title: "firewall 06", 
+            diffText: "Complejidad: Alta (II)", 
+            equation: "3(x - 4) = 15", 
+            answer: 9, 
+            time: 60,
+            steps: "1. Aplicamos la propiedad distributiva multiplicando el 3 por los términos interiores:\n   3x - 12 = 15\n2. Trasladamos el -12 sumando al término de la derecha:\n   3x = 15 + 12  ->  3x = 27\n3. El coeficiente 3 pasa dividiendo:\n   x = 27 / 3  ->  x = 9"
+        },
+        { 
+            title: "firewall 07", 
+            diffText: "Complejidad: Avanzada (I)", 
+            equation: "2(3x - 4) = 16", 
+            answer: 4, 
+            time: 45,
+            steps: "1. Aplicamos propiedad distributiva multiplicando el 2 por el binomio interno:\n   6x - 8 = 16\n2. Pasamos el término -8 al miembro derecho sumando:\n   6x = 16 + 8  ->  6x = 24\n3. Despejamos la incógnita pasando el 6 a dividir:\n   x = 24 / 6  ->  x = 4"
+        },
+        { 
+            title: "firewall 08", 
+            diffText: "Complejidad: Avanzada (II)", 
+            equation: "5x-8 = 2x + 13", 
+            answer: 7, 
+            time: 75,
+            steps: "1. Trasladamos términos: las 'x' al miembro izquierdo y los números al derecho:\n   5x - 2x = 13 + 8\n2. Simplificamos los términos semejantes de cada lado:\n   3x = 21\n3. Dividimos entre 3 para hallar el valor final de la incógnita:\n   x = 21 / 3  ->  x = 7"
+        }
+    ];
+
+    let currentLevelIndex = 0;
+    let timeLeft = 0;
+    let timerInterval = null;
+
+    window.onload = function() {
+        buildSelectOptions();
+        showStartScreen();
+    };
+
+    function buildSelectOptions() {
+        const select = document.getElementById("levelSelect");
+        select.innerHTML = "";
+        levels.forEach((lvl, idx) => {
+            const opt = document.createElement("option");
+            opt.value = idx;
+            opt.innerText = `${lvl.title}`;
+            select.appendChild(opt);
+        });
+    }
+
+    function showStartScreen() {
+        clearInterval(timerInterval);
+        
+        const video = document.getElementById("victoryVideo");
+        if(video) video.pause();
+
+        document.getElementById("startZone").classList.remove("hidden");
+        document.getElementById("gameZone").classList.add("hidden");
+        document.getElementById("victoryZone").classList.add("hidden");
+        document.getElementById("timerDisplay").style.visibility = "hidden";
+    }
+
+    function startGame() {
+        document.getElementById("startZone").classList.add("hidden");
+        loadLevel(0);
+    }
+
+    function loadLevel(index) {
+        currentLevelIndex = index;
+        document.getElementById("levelSelect").value = index;
+        
+        const level = levels[index];
+        document.getElementById("doorTitle").innerText = level.title;
+        document.getElementById("equationDisplay").innerText = level.equation;
+        document.getElementById("diffTag").innerText = level.diffText;
+
+        const inputField = document.getElementById("playerAnswer");
+        inputField.value = "";
+        inputField.disabled = false;
+        document.getElementById("feedback").innerText = "";
+        
+        document.getElementById("gameZone").classList.remove("hidden");
+        document.getElementById("victoryZone").classList.add("hidden");
+
+        const video = document.getElementById("victoryVideo");
+        if(video) video.pause();
+
+        manageTimer(level.time);
+    }
+
+    function manageTimer(defaultTime) {
+        clearInterval(timerInterval);
+        const isTimerEnabled = document.getElementById("enableTimer").checked;
+        const timerDisplay = document.getElementById("timerDisplay");
+
+        if (isTimerEnabled) {
+            timeLeft = defaultTime;
+            timerDisplay.style.visibility = "visible";
+            timerDisplay.innerText = `T: ${timeLeft}s`;
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = `T: ${timeLeft}s`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    gameOver();
+                }
+            }, 1000);
+        } else {
+            timerDisplay.style.visibility = "hidden";
+        }
+    }
+
+    function toggleTimerSettings() {
+        if (!document.getElementById("gameZone").classList.contains("hidden")) {
+            loadLevel(currentLevelIndex);
+        }
+    }
+
+    function changeLevel() {
+        const selectedLevel = parseInt(document.getElementById("levelSelect").value);
+        document.getElementById("startZone").classList.add("hidden");
+        loadLevel(selectedLevel);
+    }
+
+    function checkAnswer() {
+        const playerAns = parseFloat(document.getElementById("playerAnswer").value);
+        const correctAns = levels[currentLevelIndex].answer;
+        const feedback = document.getElementById("feedback");
+
+        if (isNaN(playerAns)) {
+            feedback.innerHTML = "<span class='error-msg'>[ Error: Inserte un valor numérico ]</span>";
+            return;
+        }
+
+        if (playerAns === correctAns) {
+            clearInterval(timerInterval);
+            feedback.innerHTML = "<span class='success-msg'>[ Solución válida. bien hecho ]</span>";
+            document.getElementById("playerAnswer").disabled = true;
+            
+            setTimeout(() => {
+                if (currentLevelIndex < levels.length - 1) {
+                    loadLevel(currentLevelIndex + 1);
+                } else {
+                    showVictory();
+                }
+            }, 1500);
+        } else {
+            feedback.innerHTML = "<span class='error-msg'>[ Solución incorrecta. respuesta denegada ]</span>";
+        }
+    }
+
+    function gameOver() {
+        document.getElementById("feedback").innerHTML = "<span class='error-msg'>[ Tiempo agotado. Reinicie otra vez loser]</span>";
+        document.getElementById("playerAnswer").disabled = true;
+    }
+
+    // PANTALLA FINAL: CARGAR PROCEDIMIENTOS DE SOLO LECTURA
+    function showVictory() {
+        document.getElementById("gameZone").classList.add("hidden");
+        document.getElementById("victoryZone").classList.remove("hidden");
+        clearInterval(timerInterval);
+
+        const reviewSelect = document.getElementById("reviewSelect");
+        reviewSelect.innerHTML = "";
+        levels.forEach((lvl, idx) => {
+            const opt = document.createElement("option");
+            opt.value = idx;
+            opt.innerText = `${lvl.title} (${lvl.equation})`;
+            reviewSelect.appendChild(opt);
+        });
+
+        // Mostrar el procedimiento del primer módulo
+        loadProcedureToEdit();
+
+        const video = document.getElementById("victoryVideo");
+        if (video) {
+            video.currentTime = 0;
+            video.play().catch(error => {
+                console.log("Auto-play bloqueado por el navegador.");
+            });
+        }
+    }
+
+    // Muestra las instrucciones sin permitir edición
+    function loadProcedureToEdit() {
+        const idx = document.getElementById("reviewSelect").value;
+        document.getElementById("procedureViewer").innerText = levels[idx].steps;
+    }
+
+    function resetGame() {
+        document.getElementById("startZone").classList.add("hidden");
+        loadLevel(currentLevelIndex);
+    }
+
+    function restartFromZero() {
+        showStartScreen();
+    }
+</script>
+
+</body>
+</html>
